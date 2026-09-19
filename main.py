@@ -130,10 +130,15 @@ graph.add_edge("itinerary_agent", "final_agent")
 graph.add_edge("final_agent", END)
 
 
-# Caching the database connection so Streamlit doesn't recreate it on every rerun
+# Caching the database connection with Neon serverless configuration
 @st.cache_resource
 def get_checkpointer():
-    pool = ConnectionPool(conninfo=DATABASE_URL, kwargs={"autocommit": True})
+    pool = ConnectionPool(
+        conninfo=DATABASE_URL, 
+        min_size=0,          
+        max_size=5,          
+        kwargs={"autocommit": True}
+    )
     chkptr = PostgresSaver(pool)
     chkptr.setup()
     return chkptr
