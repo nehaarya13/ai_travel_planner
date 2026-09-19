@@ -130,11 +130,15 @@ graph.add_edge("itinerary_agent", "final_agent")
 graph.add_edge("final_agent", END)
 
 
-# Persistent connection so both CLI and Streamlit can share the compiled app
-_pool = ConnectionPool(conninfo=DATABASE_URL, kwargs={"autocommit": True})
-checkpointer = PostgresSaver(_pool)
+# Caching the database connection so Streamlit doesn't recreate it on every rerun
+@st.cache_resource
+def get_checkpointer():
+    pool = ConnectionPool(conninfo=DATABASE_URL, kwargs={"autocommit": True})
+    chkptr = PostgresSaver(pool)
+    chkptr.setup()
+    return chkptr
 
-checkpointer.setup()
+checkpointer = get_checkpointer()
 
 app = graph.compile(checkpointer=checkpointer)
 
